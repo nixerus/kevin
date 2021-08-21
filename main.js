@@ -4,19 +4,21 @@ const store = require('data-store')({ path: process.cwd() + '/data/redditpostdat
 //discord
 const Discord = require("discord.js");
 const bot = new Discord.Client;
+const config = require("./data/config.json");
 
 //reddit
 const snoowrap = require('snoowrap');
 
+//TODO: should not be username/password
 const reddit = new snoowrap({
     userAgent: 'updates a spreadsheet with the list of approved members',
-    clientId: '',
-    clientSecret: '',
-    username: '',
-    password: ''
+    clientId: config.credentials.reddit.clientId,
+    clientSecret: config.credentials.reddit.clientSecret,
+    username: config.credentials.reddit.username,
+    password: config.credentials.reddit.password
 });
 
-const gtvsub = reddit.getSubreddit('');
+const gtvsub = reddit.getSubreddit(config.environment.subreddit);
 
 const suggestions = require('./suggestions');
 
@@ -34,8 +36,8 @@ bot.on("ready", async () => {
 });
 
 bot.on("guildMemberAdd", async (member) => {
-    if (member.guild.id == '') {
-        let channel = bot.channels.cache.get('');
+    if (member.guild.id == config.guild.id) {
+        let channel = bot.channels.cache.get(config.guild.serverLogChannel);
         let msg = await channel.send(`Welcome to the server ${member.user.tag}!`);
         msg.react('👋');
     }
@@ -43,7 +45,7 @@ bot.on("guildMemberAdd", async (member) => {
 
 bot.on("guildMemberRemove", async (member) => {
     if (member.guild.id == '') {
-        bot.api.channels('').messages.post({
+        bot.api.channels(config.guild.serverLogChannel).messages.post({
             data: {
                 content:`${member.user.tag} just left the server 🙁`
             }
@@ -52,46 +54,44 @@ bot.on("guildMemberRemove", async (member) => {
 })
 
 bot.on("message", async (msg) => {
-    if (msg.author.id != '') {
-        if (msg.author.id == 'MEE6 ID' && msg.channel.id == '') {
-            let general = await bot.channels.cache.get('');
-            let mess = await general.send(msg.content);
-            mess.react('🎂');
-        };
-    if (msg.channel.type == 'dm' && msg.author.id !== '') {
-        let GTV = await bot.guilds.fetch('');
-        if (GTV.member(msg.author).roles.cache.has('') == false) {
-            let date = new Date();
-            let datestring = date.toLocaleString('en-GB', { timeZone: 'UTC' });
+    const guild = await bot.guilds.fetch(config.guild.id);
+    if (msg.author.id == config.guild.birthdayBotId && msg.channel.id == config.guild.birthdays.birthdayChannel) {
+        const general = await bot.channels.cache.get(config.guild.birthdays.announcementChannel);
+        const mess = await general.send(msg.content);
+        mess.react('🎂');
+    }
+
+    if(msg.author.bot) {
+        return;
+    }
+
+    if (msg.channel.type == 'dm') {
+        if (guild.member(msg.author).roles.cache.has('') == false) {
+            const date = new Date();
+            const datestring = date.toLocaleString('en-GB', { timeZone: 'UTC' });
             content = msg.content;
             if (msg.attachments.array().length > 0) {
-                let attachments = msg.attachments.array();
+                const attachments = msg.attachments.array();
                 for (i=0; i < attachments.length; i++) {
                     content = content + '\n' + attachments[i].url.toString();
                 } 
             }
-            let logchannel = await bot.channels.cache.get('');
-            let logmsg = `DM From ${msg.author} at ${datestring}:\n${content}`;
+            const logchannel = await bot.channels.cache.get(config.guild.botLogChannel);
+            const logmsg = `DM From ${msg.author} at ${datestring}:\n${content}`;
             logchannel.send(logmsg);
         }
     }
-    let ogargs = msg.content.split(" ");
-    var args = msg.content.split(" ");
-    for (i=0; i < args.length; i++) {
-        args[i] = args[i].toLowerCase();
-    }
-    //for (i=0; i < args.length; i++) { this was a funny little joke
-    //    if (args[i] == 'bill') {
-    //        msg.channel.send('BILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILL')
-    //    }
-    //}
-    for (i=0; i < args.length; i++) {
-        if (args[i][0] == 't' && args[i+1] != undefined && args[i+1][0] == 'j') {
-            let GTV = await bot.guilds.cache.get('');
-            let TJ = GTV.member(bot.users.cache.get(''));
-            TJ.setNickname(`${ogargs[i]} ${ogargs[i+1]}`,'Automated TJ Nicknaming');
+
+    const originalArgs = msg.content.split(" ");
+    const lowercaseArgs = msg.content.split(" ").map(item => item.toLowerCase());
+
+    for (i=0; i < lowercaseArgs.length; i++) {
+        if (lowercaseArgs[i][0] == 't' && args[i+1] != undefined && lowercaseArgs[i+1][0] == 'j') {
+            const TJ = guild.member(bot.users.cache.get(config.users.tjUserId));
+            TJ.setNickname(`${originalArgs[i]} ${originalArgs[i+1]}`,'Automated TJ Nicknaming');
         }
     }
+
     if (args[0] == "?suggest") {
         let settings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
         let channel = await bot.channels.cache.get(settings.suggestionschannel);
@@ -339,4 +339,4 @@ async function getnewcolor(lastcolor) {
     }
 }
 
-bot.login("");
+bot.login(config.credentials.discord);

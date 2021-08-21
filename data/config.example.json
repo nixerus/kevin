@@ -1,0 +1,26 @@
+{
+    "subreddit": "",
+    "guild": {
+        "id": "",
+        "serverLogChannel": "",
+        "botLogChannel": "",
+        "birthdays": {
+            "birthdayBotId": "",
+            "birthdayChannel": "",
+            "announcementChannel": ""
+        }
+    },
+    "credentials": {
+        "reddit": {
+            "clientId": "",
+            "clientSecret": "",
+            "username": "",
+            "password": ""
+        },
+        "discord": ""
+    },
+    "users": {
+        "adminUserId": [],
+        "tjUserId": ""
+    }
+}
