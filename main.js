@@ -14,13 +14,17 @@ let suggestionSettings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'
 const snoowrap = require('snoowrap');
 
 //TODO: should not be username/password
-const reddit = new snoowrap({
-    userAgent: 'updates a spreadsheet with the list of approved members',
-    clientId: config.credentials.reddit.clientId,
-    clientSecret: config.credentials.reddit.clientSecret,
-    username: config.credentials.reddit.username,
-    password: config.credentials.reddit.password
-});
+let reddit;
+
+if(config.subreddit !== "") {
+    reddit = new snoowrap({
+        userAgent: 'updates a spreadsheet with the list of approved members',
+        clientId: config.credentials.reddit.clientId,
+        clientSecret: config.credentials.reddit.clientSecret,
+        username: config.credentials.reddit.username,
+        password: config.credentials.reddit.password
+    });
+}
 
 const gtvsub = reddit.getSubreddit(config.environment.subreddit);
 
@@ -32,11 +36,14 @@ helpmsg.description = '**Main**\n!gtv help -*Shows this message*\n/demographics 
 //!gtv star leaderboard [page ex. 1,2,3] - *Shows a leaderboard of who has gotten the most stars*;
 
 bot.on("ready", async () => {
-    checkfornewpost();
     console.log(`Logged in as ${bot.user.tag}!`);
-    setInterval(function tick() {
+
+    if(config.subreddit !== "") {
         checkfornewpost();
-    }, 60000);
+        setInterval(function tick() {
+            checkfornewpost();
+        }, 60000);
+    }
 });
 
 bot.on("guildMemberAdd", async (member) => {

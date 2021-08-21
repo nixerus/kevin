@@ -1,5 +1,6 @@
 {
     "subreddit": "",
+    "_subreddit_note": "if subreddit is left empty, it will disable the reddit functionality.",
     "guild": {
         "id": "",
         "serverLogChannel": "",
