@@ -73,8 +73,8 @@ bot.on("message", async (msg) => {
                 } 
             }
             let logchannel = await bot.channels.cache.get('');
-            let logmsg = `DM From ${msg.author} at ${datestring}:\n${content}`;
-            logchannel.send(Discord.Util.removeMentions(logmsg));
+            let logmsg = `DM From ${msg.author} at ${datestring}:\n${Discord.Util.removeMentions(content)}`;
+            logchannel.send(logmsg);
         }
     }
     let ogargs = msg.content.split(" ");
