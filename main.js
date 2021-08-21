@@ -238,7 +238,6 @@ bot.on("message", async (msg) => {
     } else if (args[0] == "!shutdown") {
         msg.channel.send('No.');
     }
-}
 });
 
 async function embed(msg, args) {
