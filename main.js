@@ -145,6 +145,7 @@ bot.on("message", async (msg) => {
                     });
                     suggestionSettings.suggestionschannel = channelid;
                     fs.writeFileSync('./data/suggestiondata.json', JSON.stringify(suggestionSettings));
+                    suggestionSettings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
                     msg.channel.send(`Suggestions channel set to ${starchannel}!`);
                     return;
                 } catch(e) {
