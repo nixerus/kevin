@@ -4,7 +4,11 @@ const store = require('data-store')({ path: process.cwd() + '/data/redditpostdat
 //discord
 const Discord = require("discord.js");
 const bot = new Discord.Client;
+
+//configuration
 const config = require("./data/config.json");
+let suggestionSettings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
+
 
 //reddit
 const snoowrap = require('snoowrap');
@@ -93,8 +97,7 @@ bot.on("message", async (msg) => {
     }
 
     if (args[0] == "?suggest") {
-        let settings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
-        let channel = await bot.channels.cache.get(settings.suggestionschannel);
+        let channel = await bot.channels.cache.get(suggestionSettings.suggestionschannel);
         let returnMsg = await suggestions.newSuggestion(msg, channel);
         msg.channel.send(returnMsg.message);
         returnMsg.suggestionMsg.react('');
@@ -104,8 +107,7 @@ bot.on("message", async (msg) => {
         if (args[1] == '0') {
             msg.channel.send('Reserved Suggestion Number.');
         }
-        let settings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
-        let suggestionChannel = await bot.channels.cache.get(settings.suggestionschannel);
+        let suggestionChannel = await bot.channels.cache.get(suggestionSettings.suggestionschannel);
         let response = await suggestions.deleteSuggestion(args[1],msg.author.id);
         if (response.status == false) {
             msg.channel.send(response.error);
@@ -115,7 +117,6 @@ bot.on("message", async (msg) => {
             msg.channel.send(`Suggestion #${response.id} deleted. It read ` + '`' + Discord.Util.removeMentions(response.desc) + '`.');
         }
     } else if (args[0] == "?suggestionchannel") { 
-        let settings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
         let admin = false;
         try {
             admin = msg.member.hasPermission('ADMINISTRATOR');
@@ -132,8 +133,8 @@ bot.on("message", async (msg) => {
                 channelid = channelid.replace('#','');
                 channelid = channelid.replace('<','');
                 try {
-                    console.log(settings.suggestionChannel);
-                    let oldchannel = await bot.channels.cache.get(settings.suggestionschannel);
+                    console.log(suggestionSettings.suggestionChannel);
+                    let oldchannel = await bot.channels.cache.get(suggestionSettings.suggestionschannel);
                     starchannel = await bot.channels.cache.get(channelid);
                     const webhooks = await oldchannel.fetchWebhooks();
 		            const webhook = webhooks.first();
@@ -142,8 +143,8 @@ bot.on("message", async (msg) => {
                         avatar:msg.author.avatarURL(),
                         channel: channelid
                     });
-                    settings.suggestionschannel = channelid;
-                    fs.writeFileSync('./data/suggestiondata.json', JSON.stringify(settings));
+                    suggestionSettings.suggestionschannel = channelid;
+                    fs.writeFileSync('./data/suggestiondata.json', JSON.stringify(suggestionSettings));
                     msg.channel.send(`Suggestions channel set to ${starchannel}!`);
                     return;
                 } catch(e) {
@@ -156,12 +157,7 @@ bot.on("message", async (msg) => {
             msg.channel.send(`You are not an admin, you can't do that`);
             return;
         }
-        fs.writeFileSync('./data/suggestiondata.json',JSON.stringify(settings));
     } else if (args[0] == "!gtv") {
-            //if (ogargs[1] == "FTRMA") { congrats ziad
-            //    const channel = bot.channels.cache.get('');
-            //    channel.send(`${msg.author} has won the puzzle!`);
-            //};
             if (args[1] == 'dm' && msg.member.hasPermission('MANAGE_MESSAGES')) {
                 console.log(msg.content);
                 let memid = args[2];
