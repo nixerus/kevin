@@ -1,13 +1,13 @@
 const fs = require('fs');
 const Discord = require("discord.js");
 const { Sequelize } = require('sequelize');
+const config = require('./data/config.json')
 
-const sequelize = new Sequelize('server', 'user', 'password', {
-	host: 'localhost',
-	dialect: 'sqlite',
+const sequelize = new Sequelize(config.credentials.database.databaseName, config.credentials.database.username, config.credentials.database.password, {
+	host: config.credentials.database.host,
+	dialect: config.credentials.database.storage == "" ? "mysql" : "sqlite",
 	logging: false,
-	// SQLite only
-	storage: 'data/suggestionsdb.sqlite',
+	storage: config.credentials.database.storage == "" ? undefined : config.credentials.database.storage,
 });
 
 const suggestionsDB = sequelize.define('suggestionsDB', {

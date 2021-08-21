@@ -17,6 +17,14 @@
             "username": "",
             "password": ""
         },
+        "database": {
+            "host": "",
+            "databaseName": "",
+            "username": "",
+            "password": "",
+            "storage": "",
+            "note": "if storage is not empty, kevin will use sqlite."
+        },
         "discord": ""
     },
     "users": {
