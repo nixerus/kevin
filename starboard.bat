@@ -1,0 +1,2 @@
+node starboard.js
+pause
