@@ -11,10 +11,11 @@ const sequelize = new Sequelize(config.credentials.database.databaseName, config
 });
 
 const suggestionsDB = sequelize.define('suggestionsDB', {
-    suggestion_number: {
-      type: Sequelize.NUMBER,
+    id: {
+      type: Sequelize.INTEGER,
+      autoIncrement: true,
       unique: false,
-      primaryKey: false,
+      primaryKey: true,
     },
     user_id: {
       type: Sequelize.STRING,
@@ -35,123 +36,124 @@ const suggestionsDB = sequelize.define('suggestionsDB', {
 suggestionsDB.sync();
 
 async function newSuggestion(msg, channel) {
-    try {
-        let data = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
-        const webhooks = await channel.fetchWebhooks();
-		const webhook = webhooks.first();
-        await webhook.edit({
-            name:msg.author.username,
-            avatar:msg.author.avatarURL()
-        });
-        let suggestion = msg.content.replace(/[?]suggest /i, '');
-        let num = data.numofsuggestions;
-        num++;
-        let webhookMsg;
-        if (msg.attachments.array().length > 0) {
-            let attachments = msg.attachments.array();
-            if (attachments[0].url.substring((attachments[0].url.length) - 3) == 'gif') {
-                webhookMsg = await webhook.send({
-                    embeds: [{
-                        description:suggestion,
-                        color:'#FFA131',
-                        footer:{text: `Suggestion #${num}`},
-                        image: {
-                            url: 'attachment://file.gif'
-                        }
-                    }],
-                    files: [{
-                        attachment: attachments[0].url,
-                        name: 'file.gif'
-                    }]
-                });
-            } else {
-                webhookMsg = await webhook.send({
-                    embeds: [{
-                        description:suggestion,
-                        color:'#FFA131',
-                        footer:{text: `Suggestion #${num}`},
-                        image: {
-                            url: 'attachment://file.jpg'
-                        }
-                    }],
-                    files: [{
-                        attachment: attachments[0].url,
-                        name: 'file.jpg'
-                    }]
-                });
-            }
-        } else {
-            webhookMsg = await webhook.send({
-                embeds: [{
-                    description:suggestion,
-                    color:'#FFA131',
-                    footer:{text: `Suggestion #${num}`}
-                }]
+    return new Promise((resolve, reject) => {
+        try {
+            let data = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
+            const webhooks = await channel.fetchWebhooks();
+            const webhook = webhooks.first();
+            await webhook.edit({
+                name:msg.author.username,
+                avatar:msg.author.avatarURL()
             });
-        };
-        await suggestionsDB.create({
-            suggestion_number: num,
-            user_id: msg.author.id,
-            suggestion_desc: suggestion,
-            message_id: webhookMsg.id
-        }); 
-        data.numofsuggestions = num;
-        fs.writeFileSync('./data/suggestiondata.json',JSON.stringify(data));
-        let returnMsg = new Discord.MessageEmbed;
-        returnMsg.description = `Your Suggestion has been sent to ${channel} to be voted on.`;
-        returnMsg.color = '#31974F';
-        returnMsg.setFooter(`Use ?deletesuggestion ${num} to delete this suggestion.`);
-        return {message: returnMsg, suggestionMsg: webhookMsg};
-    } catch(e) {
-        console.log(e);
-        return('`' + e + '`');
-    }
+            let suggestion = msg.content.replace(/[?]suggest /i, '');
+            insertSuggestion(msg.author.id, suggestion).then((suggestionModel) => {
+                let webhookMsg;
+                if (msg.attachments.array().length > 0) {
+                    let attachments = msg.attachments.array();
+                    if (attachments[0].url.substring((attachments[0].url.length) - 3) == 'gif') {
+                        webhookMsg = await webhook.send({
+                            embeds: [{
+                                description:suggestion,
+                                color:'#FFA131',
+                                footer:{text: `Suggestion #${suggestionModel.id}`},
+                                image: {
+                                    url: 'attachment://file.gif'
+                                }
+                            }],
+                            files: [{
+                                attachment: attachments[0].url,
+                                name: 'file.gif'
+                            }]
+                        });
+                    } else {
+                        webhookMsg = await webhook.send({
+                            embeds: [{
+                                description:suggestion,
+                                color:'#FFA131',
+                                footer:{text: `Suggestion #${suggestionModel.id}`},
+                                image: {
+                                    url: 'attachment://file.jpg'
+                                }
+                            }],
+                            files: [{
+                                attachment: attachments[0].url,
+                                name: 'file.jpg'
+                            }]
+                        });
+                    }
+                } else {
+                    webhookMsg = await webhook.send({
+                        embeds: [{
+                            description:suggestion,
+                            color:'#FFA131',
+                            footer:{text: `Suggestion #${suggestionModel.id}`}
+                        }]
+                    });
+                };
+            });
+            suggestionsDB.update({ message_id: webhookMsg.id }, { where: { id: suggestionModel.id }}).then(() => {
+                let returnMsg = new Discord.MessageEmbed;
+                returnMsg.description = `Your Suggestion has been sent to ${channel} to be voted on.`;
+                returnMsg.color = '#31974F';
+                returnMsg.setFooter(`Use ?deletesuggestion ${suggestionModel.id} to delete this suggestion.`);
+                resolve({message: returnMsg, suggestionMsg: webhookMsg, id: suggestionModel.id});
+            })
+        } catch(e) {
+            console.log(e);
+            reject(e);
+        }
+    });
 }
 
 async function anonymousSuggestion(suggestion, channel) {
-    try {
-        let data = JSON.parse(fs.readFileSync('../gtv/data/suggestiondata.json'));
-        const webhooks = await channel.fetchWebhooks();
-		const webhook = webhooks.first();
-        await webhook.edit({
-            name:'Anonymous',
-            avatar:'link to bot avatar'
-        });
-        let num = data.numofsuggestions;
-        num++;
-        let webhookMsg = await webhook.send({
-            embeds: [{
-                description:suggestion,
-                color:'#FFA131',
-                footer:{text: `Suggestion #${num}`}
-            }]
-        });
+    return new Promise((resolve, reject) => {
+        try {
+            insertSuggestion(null, suggestion).then((suggestionModel) => {
+                const webhooks = await channel.fetchWebhooks();
+                const webhook = webhooks.first();
+                await webhook.edit({
+                    name:'Anonymous',
+                    avatar:'link to bot avatar'
+                });
+                let webhookMsg = await webhook.send({
+                    embeds: [{
+                        description:suggestion,
+                        color:'#FFA131',
+                        footer:{text: `Suggestion #${suggestionModel.id}`}
+                    }]
+                });
+                await suggestionsDB.update({ message_id: webhookMsg.id }, { where: { id: suggestionModel.id }});
+                resolve({success: true});
+            });
+        } catch(e) {
+            reject(e);
+        }
+    });
+}
+
+async function insertSuggestion(userId, suggestion) {
+    return new Promise((resolve, reject) => {
         await suggestionsDB.create({
-            suggestion_number: num,
-            user_id: 'MYUSERID',
+            user_id: userId,
             suggestion_desc: suggestion,
-            message_id: webhookMsg.id
-        }); 
-        data.numofsuggestions = num;
-        fs.writeFileSync('../gtv/data/suggestiondata.json',JSON.stringify(data));
-        return {success: true, message: webhookMsg};
-    } catch(e) {
-        console.log(e);
-        return({success: false, error: '`' + e + '`'});
-    }
+            message_id: "TBC"
+        }).then((model) => {
+            resolve(model);
+        });
+    });
 }
 
 async function deleteSuggestion(num, userid) {
     let suggestionEntry;
-    suggestionEntry = await suggestionsDB.findOne({ where: { suggestion_number: num }});
+    suggestionEntry = await suggestionsDB.findOne({ where: { id: num }});
     try {
-        suggestionEntry = await suggestionsDB.findOne({ where: { suggestion_number: num }});
+        suggestionEntry = await suggestionsDB.findOne({ where: { id: num }});
         if(suggestionEntry == null) {
             return({status: false, error:`Could not find suggestion #${suggestion = Discord.Util.removeMentions(num)}.`});
         }
         if (suggestionEntry.dataValues.user_id == userid || userid == 'MYUSERID') {
-            await suggestionsDB.update({ suggestion_number: 0}, { where: { suggestion_number: num }});
-            return({status: true, message_id:suggestionEntry.dataValues.message_id, id:suggestionEntry.dataValues.suggestion_number, desc:suggestionEntry.dataValues.suggestion_desc});
+            await suggestionsDB.destroy({ id: num });
+            return({status: true, message_id:suggestionEntry.dataValues.message_id, id:suggestionEntry.dataValues.id, desc:suggestionEntry.dataValues.suggestion_desc});
         } else {
             return({status: false, error:`You cannot delete a suggestion that you did not make!`});
         }
