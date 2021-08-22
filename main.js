@@ -292,7 +292,7 @@ async function checkfornewpost() {
             let link = 'https://reddit.com' + newpost[0].permalink;
             redditpostembed.setURL(link);
             if (newpost[0].post_hint == 'image') {
-                //redditpostembed.setThumbnail(newpost[0].url);
+                redditpostembed.setThumbnail(newpost[0].url);
                 redditpostembed.description = newpost[0].url;
             } else if (newpost[0].is_gallery == true) {
                 let tempmsg;
@@ -304,7 +304,7 @@ async function checkfornewpost() {
                     imgids.push(newpost[0].gallery_data.items[i].media_id);
                     imgcaptions.push(newpost[0].gallery_data.items[i].caption);
                 }
-                //redditpostembed.setThumbnail(newpost[0].media_metadata[imgids[0]].s.u);
+                redditpostembed.setThumbnail(newpost[0].media_metadata[imgids[0]].s.u);
                 for(i=0; i < imgids.length; i++) {
                     imglink = newpost[0].media_metadata[imgids[i]].s.u;
                     if (imgcaptions[i] == '' || imgcaptions[i] == undefined || imgcaptions[i] == null) {
