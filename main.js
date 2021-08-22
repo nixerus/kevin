@@ -66,6 +66,7 @@ bot.on("guildMemberRemove", async (member) => {
 
 bot.on("message", async (msg) => {
     const guild = await bot.guilds.fetch(config.guild.id);
+    // Birthday Message
     if (msg.author.id == config.guild.birthdayBotId && msg.channel.id == config.guild.birthdays.birthdayChannel) {
         const general = await bot.channels.cache.get(config.guild.birthdays.announcementChannel);
         const mess = await general.send(msg.content);
@@ -76,6 +77,7 @@ bot.on("message", async (msg) => {
         return;
     }
 
+    // DM (Direct Message) Handling
     if (msg.channel.type == 'dm') {
         if (guild.member(msg.author).roles.cache.has('') == false) {
             const date = new Date();
@@ -88,7 +90,7 @@ bot.on("message", async (msg) => {
                 } 
             }
             const logchannel = await bot.channels.cache.get(config.guild.botLogChannel);
-            const logmsg = `DM From ${msg.author} at ${datestring}:\n${content}`;
+            let logmsg = `DM From ${msg.author} at ${datestring}:\n${Discord.Util.removeMentions(content)}`;
             logchannel.send(logmsg);
         }
     }
@@ -293,7 +295,7 @@ async function checkfornewpost() {
             let link = 'https://reddit.com' + newpost[0].permalink;
             redditpostembed.setURL(link);
             if (newpost[0].post_hint == 'image') {
-                //redditpostembed.setThumbnail(newpost[0].url);
+                redditpostembed.setThumbnail(newpost[0].url);
                 redditpostembed.description = newpost[0].url;
             } else if (newpost[0].is_gallery == true) {
                 let tempmsg;
@@ -305,7 +307,7 @@ async function checkfornewpost() {
                     imgids.push(newpost[0].gallery_data.items[i].media_id);
                     imgcaptions.push(newpost[0].gallery_data.items[i].caption);
                 }
-                //redditpostembed.setThumbnail(newpost[0].media_metadata[imgids[0]].s.u);
+                redditpostembed.setThumbnail(newpost[0].media_metadata[imgids[0]].s.u);
                 for(i=0; i < imgids.length; i++) {
                     imglink = newpost[0].media_metadata[imgids[i]].s.u;
                     if (imgcaptions[i] == '' || imgcaptions[i] == undefined || imgcaptions[i] == null) {
