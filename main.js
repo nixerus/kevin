@@ -52,12 +52,14 @@ bot.on("guildMemberRemove", async (member) => {
 })
 
 bot.on("message", async (msg) => {
+    // Birthday Message
     if (msg.author.id != '') {
         if (msg.author.id == 'MEE6 ID' && msg.channel.id == '') {
             let general = await bot.channels.cache.get('');
             let mess = await general.send(msg.content);
             mess.react('🎂');
         };
+    // DM (Direct Message) Handling
     if (msg.channel.type == 'dm' && msg.author.id !== '') {
         let GTV = await bot.guilds.fetch('');
         if (GTV.member(msg.author).roles.cache.has('') == false) {
@@ -71,7 +73,7 @@ bot.on("message", async (msg) => {
                 } 
             }
             let logchannel = await bot.channels.cache.get('');
-            let logmsg = `DM From ${msg.author} at ${datestring}:\n${content}`;
+            let logmsg = `DM From ${msg.author} at ${datestring}:\n${Discord.Util.removeMentions(content)}`;
             logchannel.send(logmsg);
         }
     }
