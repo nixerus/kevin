@@ -36,7 +36,7 @@ const suggestionsDB = sequelize.define('suggestionsDB', {
 suggestionsDB.sync();
 
 async function newSuggestion(msg, channel) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         try {
             let data = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
             const webhooks = await channel.fetchWebhooks();
@@ -46,7 +46,7 @@ async function newSuggestion(msg, channel) {
                 avatar:msg.author.avatarURL()
             });
             let suggestion = msg.content.replace(/[?]suggest /i, '');
-            insertSuggestion(msg.author.id, suggestion).then((suggestionModel) => {
+            insertSuggestion(msg.author.id, suggestion).then(async (suggestionModel) => {
                 let webhookMsg;
                 if (msg.attachments.array().length > 0) {
                     let attachments = msg.attachments.array();
@@ -90,14 +90,14 @@ async function newSuggestion(msg, channel) {
                         }]
                     });
                 };
+                suggestionsDB.update({ message_id: webhookMsg.id }, { where: { id: suggestionModel.id }}).then(async () => {
+                    let returnMsg = new Discord.MessageEmbed;
+                    returnMsg.description = `Your Suggestion has been sent to ${channel} to be voted on.`;
+                    returnMsg.color = '#31974F';
+                    returnMsg.setFooter(`Use ?deletesuggestion ${suggestionModel.id} to delete this suggestion.`);
+                    resolve({message: returnMsg, suggestionMsg: webhookMsg, id: suggestionModel.id});
+                })
             });
-            suggestionsDB.update({ message_id: webhookMsg.id }, { where: { id: suggestionModel.id }}).then(() => {
-                let returnMsg = new Discord.MessageEmbed;
-                returnMsg.description = `Your Suggestion has been sent to ${channel} to be voted on.`;
-                returnMsg.color = '#31974F';
-                returnMsg.setFooter(`Use ?deletesuggestion ${suggestionModel.id} to delete this suggestion.`);
-                resolve({message: returnMsg, suggestionMsg: webhookMsg, id: suggestionModel.id});
-            })
         } catch(e) {
             console.log(e);
             reject(e);
@@ -108,7 +108,7 @@ async function newSuggestion(msg, channel) {
 async function anonymousSuggestion(suggestion, channel) {
     return new Promise((resolve, reject) => {
         try {
-            insertSuggestion(null, suggestion).then((suggestionModel) => {
+            insertSuggestion(null, suggestion).then(async (suggestionModel) => {
                 const webhooks = await channel.fetchWebhooks();
                 const webhook = webhooks.first();
                 await webhook.edit({
@@ -132,7 +132,7 @@ async function anonymousSuggestion(suggestion, channel) {
 }
 
 async function insertSuggestion(userId, suggestion) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         await suggestionsDB.create({
             user_id: userId,
             suggestion_desc: suggestion,
