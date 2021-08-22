@@ -7,7 +7,6 @@ const bot = new Discord.Client;
 
 //configuration
 const config = require("./data/config.json");
-let suggestionSettings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
 
 //reddit
 const snoowrap = require('snoowrap');
@@ -105,7 +104,7 @@ bot.on("message", async (msg) => {
     }
 
     if (args[0] == "?suggest") {
-        let channel = await bot.channels.cache.get(suggestionSettings.suggestionschannel);
+        let channel = await bot.channels.cache.get(config.guild.suggestions.channel);
         let returnMsg = await suggestions.newSuggestion(msg, channel);
         msg.channel.send(returnMsg.message);
         config.guild.suggestions.reactions.forEach((reaction) => {
@@ -115,7 +114,7 @@ bot.on("message", async (msg) => {
         if (args[1] == '0') {
             msg.channel.send('Reserved Suggestion Number.');
         }
-        let suggestionChannel = await bot.channels.cache.get(suggestionSettings.suggestionschannel);
+        let suggestionChannel = await bot.channels.cache.get(config.guild.suggestions.channel);
         let response = await suggestions.deleteSuggestion(args[1],msg.author.id);
         if (response.status == false) {
             msg.channel.send(response.error);
@@ -141,8 +140,7 @@ bot.on("message", async (msg) => {
                 channelid = channelid.replace('#','');
                 channelid = channelid.replace('<','');
                 try {
-                    console.log(suggestionSettings.suggestionChannel);
-                    let oldchannel = await bot.channels.cache.get(suggestionSettings.suggestionschannel);
+                    let oldchannel = await bot.channels.cache.get(config.guild.suggestions.channel);
                     starchannel = await bot.channels.cache.get(channelid);
                     const webhooks = await oldchannel.fetchWebhooks();
 		            const webhook = webhooks.first();
@@ -151,9 +149,8 @@ bot.on("message", async (msg) => {
                         avatar:msg.author.avatarURL(),
                         channel: channelid
                     });
-                    suggestionSettings.suggestionschannel = channelid;
-                    fs.writeFileSync('./data/suggestiondata.json', JSON.stringify(suggestionSettings));
-                    suggestionSettings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
+                    config.guild.suggestions.channel = channelid;
+                    fs.writeFileSync('./data/config.json', JSON.stringify(config, null, 2));
                     msg.channel.send(`Suggestions channel set to ${starchannel}!`);
                     return;
                 } catch(e) {

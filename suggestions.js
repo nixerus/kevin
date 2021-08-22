@@ -38,7 +38,6 @@ suggestionsDB.sync();
 async function newSuggestion(msg, channel) {
     return new Promise(async (resolve, reject) => {
         try {
-            let data = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
             const webhooks = await channel.fetchWebhooks();
             const webhook = webhooks.first();
             await webhook.edit({

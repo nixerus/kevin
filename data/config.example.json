@@ -11,6 +11,7 @@
             "announcementChannel": ""
         },
         "suggestions": {
+            "channel": "",
             "reactions": ["😃", "😭", "🤔"]
         }
     },
