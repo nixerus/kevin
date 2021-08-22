@@ -9,12 +9,12 @@ const bot = new Discord.Client;
 const config = require("./data/config.json");
 let suggestionSettings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
 
-
 //reddit
 const snoowrap = require('snoowrap');
 
 //TODO: should not be username/password
 let reddit;
+let gtvsub;
 
 if(config.subreddit !== "") {
     reddit = new snoowrap({
@@ -24,9 +24,8 @@ if(config.subreddit !== "") {
         username: config.credentials.reddit.username,
         password: config.credentials.reddit.password
     });
+    gtvsub = reddit.getSubreddit(config.environment.subreddit);
 }
-
-const gtvsub = reddit.getSubreddit(config.environment.subreddit);
 
 const suggestions = require('./suggestions');
 
@@ -96,10 +95,10 @@ bot.on("message", async (msg) => {
     }
 
     const originalArgs = msg.content.split(" ");
-    const lowercaseArgs = msg.content.split(" ").map(item => item.toLowerCase());
+    const args = msg.content.split(" ").map(item => item.toLowerCase());
 
-    for (i=0; i < lowercaseArgs.length; i++) {
-        if (lowercaseArgs[i][0] == 't' && args[i+1] != undefined && lowercaseArgs[i+1][0] == 'j') {
+    for (i=0; i < args.length; i++) {
+        if (args[i][0] == 't' && args[i+1] != undefined && args[i+1][0] == 'j') {
             const TJ = guild.member(bot.users.cache.get(config.users.tjUserId));
             TJ.setNickname(`${originalArgs[i]} ${originalArgs[i+1]}`,'Automated TJ Nicknaming');
         }
