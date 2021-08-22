@@ -108,9 +108,9 @@ bot.on("message", async (msg) => {
         let channel = await bot.channels.cache.get(suggestionSettings.suggestionschannel);
         let returnMsg = await suggestions.newSuggestion(msg, channel);
         msg.channel.send(returnMsg.message);
-        returnMsg.suggestionMsg.react('');
-        returnMsg.suggestionMsg.react('');
-        returnMsg.suggestionMsg.react('');
+        config.guild.suggestions.reactions.forEach((reaction) => {
+            returnMsg.suggestionMsg.react(reaction);
+        });
     } else if (args[0] == "?deletesuggestion") {
         if (args[1] == '0') {
             msg.channel.send('Reserved Suggestion Number.');

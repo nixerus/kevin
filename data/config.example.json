@@ -9,6 +9,9 @@
             "birthdayBotId": "",
             "birthdayChannel": "",
             "announcementChannel": ""
+        },
+        "suggestions": {
+            "reactions": ["😃", "😭", "🤔"]
         }
     },
     "credentials": {
